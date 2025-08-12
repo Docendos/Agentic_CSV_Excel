@@ -123,7 +123,7 @@ DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/aidata
     "rows": [ { "col1": "...", "col2": "..." } ]
   }
   ```
-- `GET /healthz` — healthcheck
+- `GET /health` — healthcheck
 
 Each `/api/ask` is persisted in Postgres (`chat_qa`):  
 `session_id, model_name, question, answer, explanation, code, columns, rows, created_at`.
