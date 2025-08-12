@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI DataFrame Chat</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <style>
+      body { padding: 1rem; }
+      .chat { border: 1px solid var(--muted-border-color); border-radius: 12px; padding: 0.75rem; min-height: 300px; }
+      .msg { margin: .5rem 0; }
+      .msg.user { text-align: right; }
+      pre { background: #0d1117; color: #c9d1d9; padding: .5rem .75rem; border-radius: 8px; overflow-x: auto; }
+      table { width: 100%; overflow-x: auto; display: block; }
+      code.inline { background: #eee; padding: 0 .2rem; border-radius: 4px; }
+      details > summary { cursor: pointer; }
+      .explain { background: var(--muted-border-color); border-radius: 10px; padding: .5rem .75rem; margin: .5rem 0; }
+      .explain header { margin-bottom: .25rem; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h2>🧠 AI DataFrame Chat</h2>
+      <details open>
+        <summary>Upload a table</summary>
+        <form id="upload-form">
+          <input type="file" id="file" name="file" accept=".csv,.xlsx,.xls" required />
+          <button type="submit">Upload</button>
+        </form>
+        <div id="schema" style="margin-top: .5rem;"></div>
+      </details>
+
+      <h3>Chat</h3>
+      <div class="chat" id="chat"></div>
+      <form id="ask-form" style="margin-top: .5rem;">
+        <input id="question" type="text" placeholder="Ask about your data..." required />
+        <button type="submit">Send</button>
+      </form>
+    </main>
+
+    <script>
+      const chat = document.getElementById('chat');
+      const schemaDiv = document.getElementById('schema');
+
+      function escapeHtml(s) {
+        return (s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function addMsg(role, html) {
+        const div = document.createElement('div');
+        div.className = 'msg ' + role;
+        div.innerHTML = html;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function renderTable(cols, rows) {
+        if (!rows || rows.length === 0) return '';
+        let thead = '<thead><tr>' + cols.map(c => '<th>'+escapeHtml(c)+'</th>').join('') + '</tr></thead>';
+        let tbody = '<tbody>' + rows.map(r => '<tr>' + cols.map(c => '<td>'+escapeHtml(String(r[c] ?? ''))+'</td>').join('') + '</tr>').join('') + '</tbody>';
+        return '<table>'+ thead + tbody + '</table>';
+      }
+
+      document.getElementById('upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const err = await res.json();
+          schemaDiv.innerHTML = '<mark>'+ escapeHtml(err.detail || 'Upload failed') +'</mark>';
+          return;
+        }
+        const data = await res.json();
+        const parts = data.tables.map(t => {
+          const cols = t.columns.map(c => c.name + ':' + c.dtype).join(', ');
+          let prev = '';
+          if (t.preview?.length) {
+            prev = '<details><summary>preview</summary><pre>'+ escapeHtml(JSON.stringify(t.preview, null, 2)) +'</pre></details>';
+          }
+          return `<article><header><strong>${escapeHtml(t.name)}</strong></header><small>${escapeHtml(cols)}</small>${prev}</article>`;
+        });
+        schemaDiv.innerHTML = parts.join('');
+        addMsg('assistant', 'Tables uploaded. Ask away!');
+      });
+
+      document.getElementById('ask-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const q = document.getElementById('question').value.trim();
+        if (!q) return;
+        addMsg('user', escapeHtml(q));
+        document.getElementById('question').value = '';
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          addMsg('assistant', '<mark>'+ escapeHtml(err.detail || 'Error') +'</mark>');
+          return;
+        }
+        const data = await res.json();
+
+        const table = renderTable(data.columns, data.rows);
+        const hasTable = (data.rows && data.rows.length) || (data.columns && data.columns.length);
+
+        const answerBlock = (!hasTable && data.answer)
+          ? `<p>${escapeHtml(data.answer)}</p>` : '';
+
+        const explanationText = (data.explanation || '').trim();
+        const explanationBlock = explanationText
+          ? `<article class="explain"><header><strong>Explanation</strong></header><p>${escapeHtml(explanationText).replace(/\n/g,'<br>')}</p></article>`
+          : '';
+
+        const code = (data.code || []).map(c =>
+          '<details><summary>Code (pandas)</summary><pre>'+ escapeHtml(c) +'</pre></details>'
+        ).join('');
+
+        addMsg('assistant', `${answerBlock}${explanationBlock}${code}${table}`);
+      });
+    </script>
+  </body>
+</html>

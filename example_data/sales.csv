@@ -1,0 +1,21 @@
+date,region,product,units,unit_price,revenue
+2024-06-01,North,Widget A,120,10.0,1200.0
+2024-06-02,North,Widget B,90,12.0,1080.0
+2024-06-03,South,Widget A,150,10.0,1500.0
+2024-06-04,South,Widget C,70,15.0,1050.0
+2024-06-05,West,Widget B,110,12.0,1320.0
+2024-06-06,West,Widget C,95,15.0,1425.0
+2024-06-07,East,Widget A,130,10.0,1300.0
+2024-06-08,East,Widget B,85,12.0,1020.0
+2024-06-09,North,Widget C,60,15.0,900.0
+2024-06-10,South,Widget B,140,12.0,1680.0
+2024-06-11,West,Widget A,160,10.0,1600.0
+2024-06-12,East,Widget C,55,15.0,825.0
+2024-06-13,North,Widget A,100,10.0,1000.0
+2024-06-14,South,Widget A,170,10.0,1700.0
+2024-06-15,West,Widget B,75,12.0,900.0
+2024-06-16,East,Widget A,125,10.0,1250.0
+2024-06-17,North,Widget B,105,12.0,1260.0
+2024-06-18,South,Widget C,65,15.0,975.0
+2024-06-19,West,Widget A,155,10.0,1550.0
+2024-06-20,East,Widget B,95,12.0,1140.0
