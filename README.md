@@ -1,4 +1,4 @@
-# AI DataFrame Chat (FastAPI · Pandas · OpenAI)
+# AI CSV/Excel Chat (FastAPI · Pandas · OpenAI)
 
 Chat with your CSV/Excel data.
 
@@ -35,6 +35,15 @@ Open: http://localhost:8000
 - **Answer + pandas code + explanation + preview**
 - **Postgres logging** of each Q&A turn
 - **Safety-first execution**: no external imports; restricted execution environment
+
+---
+
+## Demo
+
+1. 
+https://github.com/user-attachments/assets/3bd93792-3b85-4907-825e-12acd319cb72
+2.
+https://github.com/user-attachments/assets/fa32a365-ccf4-4227-a415-fcdddad7226a
 
 ---
 
